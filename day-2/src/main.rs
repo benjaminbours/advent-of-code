@@ -16,28 +16,29 @@ fn main() {
         let letter = policy_iterator.next().unwrap();
 
         let min_max: Vec<u32> = time.split("-").map(|x| x.parse::<u32>().unwrap()).collect();
-        let min = min_max[0];
-        let max = min_max[1];
-        // println!("{:?}", min_max);
+        let pos1 = min_max[0];
+        let pos2 = min_max[1];
 
-        // password.chars().for_each(|x| {
-        // });
         let mut count = 0;
         let mut password_chars = password.chars();
+        let mut iterator_index = 0;
         loop {
+            iterator_index += 1;
             let c = password_chars.next();
 
             if c.is_none() {
                 break;
             }
 
-            if c.unwrap().to_string() == letter {
-                println!("{}, {}, {}", c.unwrap().to_string(), letter, count);
+            if (iterator_index == pos1 || iterator_index == pos2)
+                && c.unwrap().to_string() == letter
+            {
+                println!("{}, {}, {}", c.unwrap().to_string(), letter, iterator_index);
                 count += 1;
             }
         }
-
-        if count <= max && count >= min {
+        println!("count: {}", count);
+        if count == 1 {
             valid_password_count += 1;
             println!("password: {} is valid", password);
         }
