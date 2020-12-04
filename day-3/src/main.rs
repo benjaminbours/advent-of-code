@@ -67,6 +67,7 @@ fn main() {
                 }
             },
         );
+        // use product instead of fold
 
     println!("{:?}", results);
 }
