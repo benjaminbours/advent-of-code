@@ -1,8 +1,16 @@
+use std::collections::HashSet;
 use std::fs;
+use std::iter::FromIterator;
 
 const YEAR: u32 = 2020;
 
 fn main() {
+    first_iteration();
+    first_part_functional();
+    second_part_functional();
+}
+
+fn first_iteration() {
     let input = fs::read_to_string("input.txt").unwrap();
     let lines = input.lines().collect::<Vec<&str>>();
 
@@ -27,4 +35,39 @@ fn main() {
     }
 
     println!("These three number multiplied equal {}", result.unwrap());
+}
+
+fn first_part_functional() {
+    let input = fs::read_to_string("input.txt").unwrap();
+    let lines = input.lines().map(|x| x.parse::<u32>().unwrap());
+    let entries = HashSet::<u32>::from_iter(lines);
+
+    let result = entries
+        .iter()
+        .find_map(|x| entries.get(&(YEAR - x)).map(|y| y * x));
+
+    if result.is_some() {
+        println!("first part result is {}", result.unwrap());
+    } else {
+        println!("no result");
+    }
+}
+
+fn second_part_functional() {
+    let input = fs::read_to_string("input.txt").unwrap();
+    let lines = input.lines().map(|x| x.parse::<i32>().unwrap());
+    let entries = HashSet::<i32>::from_iter(lines);
+
+    let result = entries.iter().find_map(|x| {
+        entries
+            .iter()
+            .filter(|&y| x != y)
+            .find_map(|y| entries.get(&(YEAR as i32 - x - y)).map(|z| x * y * z))
+    });
+
+    if result.is_some() {
+        println!("second part result is {}", result.unwrap());
+    } else {
+        println!("no result");
+    }
 }
