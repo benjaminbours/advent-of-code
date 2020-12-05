@@ -39,12 +39,29 @@ fn main() {
         let seat_id = row * 8 + column;
 
         seat_id
-
     });
 
-    println!("{:?}", seats.clone().collect::<Vec<i32>>());
+    let rest: Vec<i32> = seats.clone().fold(Vec::new(), |mut arr, id| {
+        let upper = seats.clone().find(|seat| seat == &(id + 2));
+        let lower = seats.clone().find(|seat| seat == &(id - 2));
 
-    let highest_seat_id = seats.max().unwrap();
+        if upper.is_some() && lower.is_some() {
+            arr.push(lower.unwrap() + 1);
+            println!(
+                "{}, {}, {}",
+                lower.unwrap(),
+                lower.unwrap() + 1,
+                upper.unwrap()
+            );
+        }
 
-    println!("{:?}", highest_seat_id);
+        arr
+    });
+
+    println!("{:?}", rest);
+    let yo = rest
+        .iter()
+        .filter(|x| !seats.clone().collect::<Vec<i32>>().contains(x));
+
+    println!("{:?}", yo.collect::<Vec<&i32>>());
 }
