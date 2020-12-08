@@ -1,12 +1,13 @@
 use std::fs;
+use std::mem;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 enum Operation {
     NoOperation,
     Accumulator,
     Jump,
 }
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 struct Instruction {
     executed: bool,
     operation: Operation,
@@ -33,6 +34,91 @@ impl Instruction {
 }
 
 fn main() {
+    let input = fs::read_to_string("input.txt").unwrap();
+    let lines = input.lines();
+
+    let instructions: Vec<Instruction> = lines.map(|line| Instruction::new(line)).collect();
+
+    println!("{:?}", instructions);
+
+    let jumps_or_nops: Vec<(usize, Instruction)> = instructions
+        .iter()
+        .enumerate()
+        .filter_map(|(index, instruction)| {
+            if instruction.operation == Operation::Jump
+                || instruction.operation == Operation::NoOperation
+            {
+                return Some((index, instruction.clone()));
+            }
+            None
+        })
+        .collect();
+
+    println!("{:?}", jumps_or_nops);
+
+    // For each item that can be edited, check if it's possible to terminate the program.
+    jumps_or_nops.iter().for_each(|(index, _)| {
+        // replace instruction in list
+        let mut instructions_edited = instructions.clone();
+        let edited_instruction = instructions_edited.get_mut(index.clone()).unwrap();
+
+        if edited_instruction.operation == Operation::NoOperation {
+            edited_instruction.operation = Operation::Jump;
+        }
+
+        if edited_instruction.operation == Operation::Jump {
+            edited_instruction.operation = Operation::NoOperation;
+        }
+
+        let result = terminate_program(instructions_edited);
+
+        if result.is_ok() {
+            println!("{:?}", result);
+        }
+
+    });
+}
+
+fn terminate_program(mut instructions: Vec<Instruction>) -> Result<i32, &'static str> {
+    let instructions_total_count = instructions.iter().count();
+
+    let mut index: i32 = 0;
+    let mut accumulator = 0;
+    loop {
+        let instruction = instructions.get_mut(index as usize);
+
+        match instruction {
+            Some(i) => {
+                // if second time it means it's an infinite loop and it's the wrong value that has been modified
+                if i.executed {
+                    break (Err("Loop"));
+                }
+
+                match i.operation {
+                    Operation::Accumulator => {
+                        accumulator += i.argument;
+                        index += 1;
+                    }
+                    Operation::Jump => {
+                        index += i.argument;
+                    }
+                    Operation::NoOperation => {
+                        index += 1;
+                    }
+                }
+
+                i.executed = true;
+            }
+            None => {
+                // end of the program
+                break (Ok(accumulator));
+            }
+        }
+        // println!("{:?}", instruction);
+    }
+}
+
+fn part_one() {
     let input = fs::read_to_string("input.txt").unwrap();
     let lines = input.lines();
 
