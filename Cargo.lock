@@ -70,6 +70,10 @@ name = "day-8"
 version = "0.1.0"
 
 [[package]]
+name = "day-9"
+version = "0.1.0"
+
+[[package]]
 name = "hermit-abi"
 version = "0.1.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
