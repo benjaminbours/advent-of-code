@@ -77,14 +77,14 @@ fn round(grid: &mut HashMap<Vector2, SeatState>) {
         // println!("adj seats: {}", adjacent_seats);
         match state {
             SeatState::Empty if adjacent_seats == 0 => *state = SeatState::Occupied,
-            SeatState::Occupied if adjacent_seats >= 4 => *state = SeatState::Empty,
+            SeatState::Occupied if adjacent_seats >= 5 => *state = SeatState::Empty,
             _ => (),
         }
     });
 }
 
-fn find_adjacent_seats(position: &Vector2, grid: &HashMap<Vector2, SeatState>) -> i32 {
-    let positions = vec![
+fn find_adjacent_seats<'a>(position: &Vector2, grid: &'a HashMap<Vector2, SeatState>) -> i32 {
+    let directions = vec![
         (1, 0),   // right
         (-1, 0),  // left
         (0, -1),  // top
@@ -96,23 +96,33 @@ fn find_adjacent_seats(position: &Vector2, grid: &HashMap<Vector2, SeatState>) -
     ];
 
     let adjacent_seats: Vec<(Vector2, &SeatState)> =
-        positions.iter().fold(vec![], |mut acc, (x, y)| {
-            let vector = Vector2 {
-                x: position.x + x,
-                y: position.y + y,
-            };
-            match grid.get(&vector) {
-                Some(seat_state) => {
-                    // println!("{:?}", seat_state);
-                    acc.push((vector, seat_state));
-                }
-                None => (),
+        directions.iter().fold(vec![], |mut acc, direction| {
+            match find_seat_in_direction(position, direction, grid) {
+                Ok(s) => acc.push(s),
+                Err(_) => (),
             }
             acc
         });
 
-    adjacent_seats
-        .iter()
-        .filter(|(_, state)| state == &&SeatState::Occupied)
-        .count() as i32
+    adjacent_seats.iter().count() as i32
+}
+
+fn find_seat_in_direction<'a>(
+    start: &Vector2,
+    (x, y): &(i32, i32),
+    grid: &'a HashMap<Vector2, SeatState>,
+) -> Result<(Vector2, &'a SeatState), String> {
+    let vector = Vector2 {
+        x: start.x + x,
+        y: start.y + y,
+    };
+
+    match grid.get(&vector) {
+        Some(seat_state) => match seat_state {
+            SeatState::Occupied => Ok((vector, seat_state)),
+            SeatState::Empty => Err("Can only see empty seat in this direction".to_string()),
+            SeatState::Floor => find_seat_in_direction(&vector, &(x.clone(), y.clone()), grid),
+        },
+        None => Err("nothing in this direction".to_string()),
+    }
 }
