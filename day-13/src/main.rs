@@ -1,3 +1,4 @@
+use modinverse::modinverse;
 use std::fs;
 
 fn main() {
@@ -6,8 +7,17 @@ fn main() {
     let earliest_timestamp = lines.next().unwrap().parse::<i32>().unwrap();
     let buses = lines.next().unwrap();
 
-    let result = find_earliest_timestamp(buses);
-    println!("answer is: {}", result);
+    let (modulii, residues): (Vec<_>, Vec<_>) = buses
+        .split(',')
+        .enumerate()
+        .filter(|(_, id)| id != &"x")
+        .map(|(i, id)| (i as i64, id.parse::<i64>().unwrap()))
+        .map(|(i, id)| (id, id - i))
+        .unzip();
+
+    let answer = chinese_remainder(&residues, &modulii).unwrap();
+    // let result = find_earliest_timestamp(buses);
+    println!("answer is: {}", answer);
 }
 
 fn find_earliest_timestamp(input: &str) -> i64 {
@@ -64,11 +74,20 @@ fn vec_compare(va: &Vec<(usize, i32)>, vb: &Vec<(usize, i32)>) -> bool {
     (va.len() == vb.len()) && va.iter().zip(vb).all(|(a, b)| a.0 == b.0 && a.1 == b.1)
 }
 
-// fn chinese_remainder(residues: &Vec<i64>, modulii: &Vec<i64>) -> Option<i64> {
-//     let prod: i64 = modulii.iter().product();
+fn chinese_remainder(residues: &Vec<i64>, modulii: &Vec<i64>) -> Option<i64> {
+    let prod: i64 = modulii.iter().product();
 
-//     let sum = Option<i64> = residues.iter().zip(modulii)
-// }
+    let sum: Option<i64> = residues
+        .iter()
+        .zip(modulii)
+        .map(|(&residue, &modulus)| {
+            let p = prod / modulus;
+            modinverse(p, modulus).map(|inv| residue * inv * p)
+        })
+        .sum();
+
+    sum.map(|s| s % prod)
+}
 
 #[cfg(test)]
 mod tests {
@@ -80,7 +99,7 @@ mod tests {
         let result = find_earliest_timestamp(input);
         assert_eq!(754018, result);
     }
-    
+
     #[test]
     fn second_example() {
         let input = "67,x,7,59,61";
